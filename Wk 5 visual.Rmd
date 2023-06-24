@@ -1,0 +1,55 @@
+---
+title: "ANA 515 WK5 Visualizations"
+author: "Yuening (Ariel) Wang"
+date: "2023-06-24"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(dplyr)
+library(knitr)
+```
+
+
+```{r getdata, include=FALSE}
+#Used dplyr package to read in the data
+data <-read.csv("/Users/wangyuening/Desktop/McDaniel /Data Storage/Assignment 2/hotel_guests_dataset.csv")
+```
+
+
+```{r cleandata, include=FALSE}
+#change the card number from scientific number to text
+data <- data %>%
+  mutate(credit_card_number = format(credit_card_number, scientific = FALSE))
+```
+```{r change_name,include=FALSE}
+#Changing the column name 'X' to 'Record#' 
+data <- data %>%
+  rename('Record#' = X)
+```
+```{r change to date data,include=FALSE}
+#change the checkin and check out date to date format
+data$checkin_date <- as.Date(data$checkin_date, format = "%d %b %Y")
+data$checkout_date <- as.Date(data$checkout_date, format = "%d %b %Y")
+```
+```{r filter data, include=FALSE}
+# There are some rows that has checkout data earlier than checkin date, which is not righ, so we need to filtered out the rows that the checkout_data is earlier than checkin_data
+filtered_data <- data %>%
+  filter(checkout_date > checkin_date)
+```
+```{r add duration,include=FALSE}
+#Add a column to calculate the duration of a customer's stay
+filtered_data <- filtered_data %>%
+  mutate(duration_days= as.numeric(difftime(checkout_date, checkin_date, units = "days")))
+```
+
+This is a Bar charge below record the count of room type in the previous order data.We can see what is the most popular room type is. The filling of the bar shows how many customer has rewards who ordered this room type.
+
+```{r barcharg, echo = FALSE}
+ggplot(data = filtered_data) + geom_bar(mapping = aes(x = room_type, fill= has_rewards, position="identity"))
+```
+Below is a scatterplot and line chart. It looksa at whether there is relationship between room rate (x axis) and how many days the customer stayed (y axis). Looks like there aren't a high positive/nagative relationship between these two variables. 
+```{r point, echo = FALSE}
+ggplot (data = filtered_data) + geom_point(mapping = aes(x = room_rate, y = duration_days), color = "pink") + geom_smooth(mapping = aes(x = room_rate, y = duration_days))
+```
